@@ -1,0 +1,24 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t nkwochidubem/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run nkwochidubem/react-test npm run test -- --watchAll=false
+
+after_success:
+  - docker build -t nkwochidubem/multi-client ./client 
+  - docker build -t nkwochidubem/multi-server ./server 
+  - docker build -t nkwochidubem/multi-worker ./worker 
+  - docker build -t nkwochidubem/multi-nginx ./nginx 
+
+  # Login to the Docker CLI
+  - echo "$DOCKER_PASSWORD"  | docker login -u "$DOCKER_ID" --password-stdin
+
+  # Push production images to docker Hub
+  - docker push nkwochidubem/multi-client
+  - docker push nkwochidubem/multi-nginx
+  - docker push nkwochidubem/multi-server
+  - docker push nkwochidubem/multi-worker
